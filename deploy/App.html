@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ProjectTree</title>
+
+    <script type="text/javascript" src="/apps/2.0/sdk.js"></script>
+
+    <script type="text/javascript">
+        Rally.onReady(function () {
+                Ext.define("Rally.data.wsapi.TreeStoreBuilderFix",{override:"Rally.data.wsapi.TreeStoreBuilder",loadModels:function(config){return config.mapper||(config.mapper=Ext.create("Rally.data.wsapi.ParentChildMapperFix")),this.callParent([config]).then({success:function(models){return config.mapper.initDynamicTypesIfRequired(models,config.context).then({success:function(){return this._setupTreeModel(this._getComponentModels(models),config)},scope:this})},scope:this})}}),Ext.define("Rally.data.wsapi.ParentChildMapperFix",{override:"Rally.data.wsapi.ParentChildMapper",constructor:function(){this.parentChildTypeMap={hierarchicalrequirement:[{typePath:"defect",collectionName:"Defects",parentField:"Requirement"},{typePath:"task",collectionName:"Tasks",parentField:"WorkProduct"},{typePath:"testcase",collectionName:"TestCases",parentField:"WorkProduct"},{typePath:"hierarchicalrequirement",collectionName:"Children",parentField:"Parent"}],defect:[{typePath:"task",collectionName:"Tasks",parentField:"WorkProduct"},{typePath:"testcase",collectionName:"TestCases",parentField:"WorkProduct"}],defectsuite:[{typePath:"defect",collectionName:"Defects",parentField:"DefectSuites"},{typePath:"task",collectionName:"Tasks",parentField:"WorkProduct"},{typePath:"testcase",collectionName:"TestCases",parentField:"WorkProduct"}],testset:[{typePath:"task",collectionName:"Tasks",parentField:"WorkProduct"},{typePath:"testcase",collectionName:"TestCases",parentField:"TestSets"}],testcase:[{typePath:"defect",collectionName:"Defects",parentField:"TestCase"}],attributedefinition:[{typePath:"allowedattributevalue",collectionName:"AllowedValues",parentField:"AttributeDefinition"}],project:[{typePath:"project",collectionName:"Children",parentField:"Parent"}]}}}),Ext.define("CustomApp",{extend:"Rally.app.App",componentCls:"app",launch:function(){var pt=Ext.create("Rally.data.wsapi.TreeStoreBuilderFix").build({models:["project"],autoLoad:!0,enableHierarchy:!0}).then({success:function(store){Ext.create("Ext.Container",{items:[{xtype:"rallytreegrid",columnCfgs:["Name","Owner","Description"],store:store}]})}});this.add(pt)}});
+
+            Rally.launchApp('CustomApp', {
+                name:"ProjectTree",
+	            parentRepos:""
+            });
+
+        });
+    </script>
+
+
+    <style type="text/css">
+        
+    </style>
+</head>
+<body>
+</body>
+</html>

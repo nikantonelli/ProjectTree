@@ -1,0 +1,213 @@
+Ext.define('Rally.ui.tree.DescriptionRichTextView', {
+    extend: Ext.view.View,
+    alias: 'widget.treedescriptionrichtextview',
+
+    cls: 'description-richtextview',
+
+    initComponent: function() {
+        this.callParent(arguments);
+        this._createTpl();
+
+    },
+
+    constructor: function(config) {
+        this.mergeConfig(config);
+        this.callParent(arguments);
+    },
+
+    _createTpl: function() {
+        this.tpl = new Ext.XTemplate(
+            '<tpl>',
+                '<div class="description">{[this.getDetails()]}</div>',
+            '</tpl>'
+        );
+
+        this.tpl.self.addMembers({
+            getDetails: Ext.bind(function(record) {
+                return record.get('Description');
+            }, this)
+        });
+    },
+});
+
+Ext.define('Rally.ui.tree.EditorsList', {
+    extend: Ext.view.View,
+    alias: 'widget.treeeditorslist',
+
+    cls: 'description-richtextview',
+
+    initComponent: function() {
+        this.callParent(arguments);
+        this._createTpl();
+
+    },
+
+    constructor: function(config) {
+        this.mergeConfig(config);
+        this.callParent(arguments);
+    },
+
+    _createTpl: function() {
+        this.tpl = new Ext.XTemplate(
+            '<tpl>',
+                '<div class="description">{[this.getDetails()]}</div>',
+            '</tpl>'
+        );
+
+        this.tpl.self.addMembers({
+            getDetails: Ext.bind(function(record) {
+                return record.get('Description');
+            }, this)
+        });
+    },
+});
+
+
+Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
+    alias: 'widget.extendedTreeItem',
+    extend: 'Rally.ui.tree.TreeItem',
+    config: {
+        displayFields: ['Name', 'Description']
+    },
+
+    getContentTpl: function() {
+        var me = this;
+
+        var descriptionField = new Rally.ui.tree.DescriptionRichTextView({});
+        var usersField = new Rally.ui.tree.EditorsList({});
+
+        var retval = Ext.create('Ext.XTemplate',
+            '<table><tr>',
+            '<td>',
+            '<tpl if="this.canDrag()"><div class="icon drag"></div></tpl>',
+            '{[this.getActionsGear()]}',
+            '{[this.getProjectInfo()]}',
+            '</td>',
+//            '{[this.getEditors()]}',
+            '<td style="padding-left:15px">',
+            descriptionField.tpl.getDetails(me.getRecord()),
+            '</td>',
+            '</tr></table>',
+
+            {
+                getProjectInfo: function() {
+                    var record = me.getRecord();
+                    var retStr = record.get('Name') + ' (' + record.get('Owner')._refObjectName + ')';
+                    
+                    return retStr;
+                },
+
+                canDrag: function() {
+                    return me.getCanDrag();
+                },
+
+                getActionsGear: function() {
+                    return me._buildActionsGearHtml();
+                },
+
+                getEditors: function() {
+
+                    var record = me.getRecord();
+                    var editors = record.getCollection('Editors').load().then({
+
+                        success: function(data) {
+
+                            var retval = '';
+
+                            _.each( data, function(ed) {
+                                if ( retval.length != 0) { retval += ' ';}
+                                retval += ed.get('Name');
+                            });
+
+                            return retval;
+                        }
+                    });
+                },
+
+            }
+        );
+        return retval;
+    }
+});
+
+Ext.define('CustomApp', {
+    extend: 'Rally.app.App',
+    componentCls: 'app',
+
+    _getContext: function(app) {
+        debugger;
+    },
+
+    launch: function() {
+
+        var app = this;
+       var pt = Ext.create( 'Rally.ui.tree.ProjectTree', {
+        config: {
+            treeItemConfigForRecordFn:  function(record) {
+                if (record.get('_type') === 'workspace'){
+                    return { xtype: 'rallyplaintreeitem' };
+                }
+                else {
+                    return {
+                        xtype: 'extendedTreeItem',
+                        selectable: true
+                    };
+                }
+            },
+            topLevelStoreConfig: {
+                fetch: ['Name', 'Editors', 'State', 'Workspace'],
+                filters: [{
+                    property: 'State',
+                    value: 'Open'
+                }, {
+                    property: 'Projects.State',
+                    value: 'Open'
+                }],
+                sorters: [{
+                    property: 'Name',
+                    direction: 'ASC'
+                }],
+                context: function() { app._getContext(app); }
+            },
+
+            childItemsStoreConfigForParentRecordFn: function(record){
+
+                var storeConfig = {
+                    fetch: ['Name', 'Editors', 'Description', 'Children:summary[State]', 'State', 'Workspace', 'Owner'],
+                    hydrate: [ 'Editors', 'Owner' ],
+                    sorters: [{
+                        property: 'Name',
+                        direction: 'ASC'
+                    }]
+                };
+
+                if(record.get('_type') === 'workspace'){
+                    return Ext.apply(storeConfig, {
+                        filters: [{
+                            property: 'Parent',
+                            value: 'null'
+                        }],
+                        context: {
+                            workspace: record.get('_ref'),
+                            project: null
+                        }
+                    });
+                } else {
+                    return Ext.apply(storeConfig, {
+                        filters: [{
+                            property: 'Parent',
+                            value: record.get('_ref')
+                        }],
+                        context: {
+                            workspace: record.get('Workspace')._ref,
+                            project: null
+                        }
+                    });
+                }
+            }
+        }
+       });
+
+       this.add(pt);
+    }
+});
