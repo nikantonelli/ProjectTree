@@ -5,6 +5,37 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
         displayedFields: ['Name', 'Description', 'TeamMembers']
     },
 
+    getContentTpl: function() {
+        var me = this;
+
+        return Ext.create('Ext.XTemplate',
+            '<tpl if="this.canDrag()"><div class="icon drag"></div></tpl>',
+            '{[this.getActionsGear()]}',
+            '<div class="textContent ellipses">{[this.getFormattedId()]} {[this.getSeparator()]}{Name} ({[this.getOwner()]})</div>',
+            '<div class="rightSide">',
+            '</div>',
+            {
+                canDrag: function() {
+                    return me.getCanDrag();
+                },
+                getActionsGear: function() {
+                    return me._buildActionsGearHtml();
+                },
+                getFormattedId: function() {
+                    var record = me.getRecord();
+                    return record.getField('FormattedID') ? Rally.ui.renderer.RendererFactory.renderRecordField(record, 'FormattedID') : '';
+                },
+                getSeparator: function() {
+                    return this.getFormattedId() ? '- ' : '';
+                },
+                getOwner: function() {
+                    var record = me.getRecord();
+                    return record.getField('Owner') ? Rally.ui.renderer.RendererFactory.renderRecordField(record, 'Owner') : '';
+                }
+            }
+        );
+    },
+
     draw: function() {
         var me = this;
 
@@ -103,7 +134,7 @@ Ext.define('CustomApp', {
                 }
             },
             topLevelStoreConfig: {
-                fetch: ['Name', 'Editors', 'State', 'Workspace'],
+                fetch: ['Name', 'State', 'Workspace'],
                 filters: [{
                     property: 'State',
                     value: 'Open'
@@ -121,7 +152,8 @@ Ext.define('CustomApp', {
             childItemsStoreConfigForParentRecordFn: function(record){
 
                 var storeConfig = {
-                    fetch: ['Name', 'Description', 'Children:summary[State]', 'State', 'Workspace'],
+                    fetch: ['Name', 'Description', 'Owner', 'Children:summary[State]', 'State', 'Workspace'],
+                    hydrate: ['Owner'],
                     sorters: [{
                         property: 'Name',
                         direction: 'ASC'
