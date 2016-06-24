@@ -27,6 +27,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 
             xtype: 'container',
             itemId: 'treeItemContent',
+            overflowX: true,
             cls: cls,
             layout: {
                 type: 'hbox'
@@ -64,7 +65,6 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                         cmp.add(
                                             {   xtype: 'container',
                                                 cls: 'rally-textfield-component',
-//                                                itemId: 'teamMembersInfo',
                                                 style: { marginLeft: '10px'},
                                                 html: member.get('_refObjectName')
                                             }
@@ -88,7 +88,8 @@ Ext.define('CustomApp', {
     launch: function() {
 
         var app = this;
-       var pt = Ext.create( 'Rally.ui.tree.ProjectTree', {
+        var pt = Ext.create( 'Rally.ui.tree.ProjectTree', {
+
         config: {
             treeItemConfigForRecordFn:  function(record) {
                 if (record.get('_type') === 'workspace'){
@@ -120,8 +121,7 @@ Ext.define('CustomApp', {
             childItemsStoreConfigForParentRecordFn: function(record){
 
                 var storeConfig = {
-                    fetch: ['Name', 'Editors', 'Description', 'Children:summary[State]', 'State', 'Workspace', 'Owner'],
-                    hydrate: [ 'Editors', 'Owner' ],
+                    fetch: ['Name', 'Description', 'Children:summary[State]', 'State', 'Workspace'],
                     sorters: [{
                         property: 'Name',
                         direction: 'ASC'
