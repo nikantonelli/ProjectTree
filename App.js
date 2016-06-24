@@ -27,7 +27,7 @@ Ext.define('Rally.ui.tree.DescriptionRichTextView', {
                 return record.get('Description');
             }, this)
         });
-    },
+    }
 });
 
 Ext.define('Rally.ui.tree.EditorsList', {
@@ -59,7 +59,7 @@ Ext.define('Rally.ui.tree.EditorsList', {
                 return record.get('Description');
             }, this)
         });
-    },
+    }
 });
 
 
@@ -70,73 +70,85 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
         displayedFields: ['Name', 'Description', 'TeamMembers']
     },
 
-    getContentTpl: function() {
+    draw: function() {
         var me = this;
 
-        var descriptionField = new Rally.ui.tree.DescriptionRichTextView({});
-        var usersField = new Rally.ui.tree.EditorsList({});
+        if (this.content) {
+            this.content.destroy();
+        }
 
-        var retval = Ext.create('Ext.XTemplate',
-            '<table><tr>',
-            '<td>',
-            '<tpl if="this.canDrag()"><div class="icon drag"></div></tpl>',
-            '{[this.getActionsGear()]}',
-            '{[this.getProjectInfo()]}',
-            '</td>',
-//            '{[this.getEditors()]}',
-            '<td style="padding-left:15px">',
-            descriptionField.tpl.getDetails(me.getRecord()),
-            '</td>',
-            '</tr></table>',
+        var cls = 'treeItemContent';
+        if (this.getSelectable()) {
+            cls += ' selectable';
+        }
 
-            {
-                getProjectInfo: function() {
-                    var record = me.getRecord();
-                    var retStr = record.get('Name') + ' (' + record.get('Owner')._refObjectName + ')';
-                    
-                    return retStr;
+        if (!this.expander) {
+            this.expander = this.drawExpander();
+        } else {
+            this.toggleExpander();
+        }
+
+        this.insert(1, {
+
+            xtype: 'container',
+            itemId: 'treeItemContent',
+            cls: cls,
+            layout: {
+                type: 'hbox'
+            },
+            items: [
+                {
+                    xtype: 'component',
+                    renderTpl: this.getContentTpl(),
+                    renderData: this.getRenderData(),
+                    listeners: {
+                        afterrender: function() {
+                            this.setupListeners();
+                            this.fireEvent('draw');
+                        },
+                        scope: this
+                    }
                 },
+                {
+                    xtype: 'container',
+                    itemId: 'userInfoRecord',
+                    layout: {
+                        type: 'hbox'
+                    },
+                    style: {
+                        marginLeft: '50px'
+                    },
+                    listeners: {
+                        afterrender: function(cmp) {
+                            var treeItem = me;
 
-                canDrag: function() {
-                    return me.getCanDrag();
-                },
-
-                getActionsGear: function() {
-                    return me._buildActionsGearHtml();
-                },
-
-                getEditors: function() {
-
-                    var record = me.getRecord();
-                    var editors = record.getCollection('Editors').load().then({
-
-                        success: function(data) {
-
-                            var retval = '';
-
-                            _.each( data, function(ed) {
-                                if ( retval.length != 0) { retval += ' ';}
-                                retval += ed.get('Name');
+                            var record = me.getRecord();
+                            record.getCollection('TeamMembers').load().then({
+                                success: function(data) {
+                                    _.each(data, function(member) {
+                                        cmp.add(
+                                            {   xtype: 'container',
+                                                cls: 'rally-textfield-component',
+//                                                itemId: 'teamMembersInfo',
+                                                style: { marginLeft: '10px'},
+                                                html: member.get('_refObjectName')
+                                            }
+                                        );
+                                    });
+                                }
                             });
-
-                            return retval;
                         }
-                    });
-                },
+                    }
+                }
+            ]
+        });
 
-            }
-        );
-        return retval;
     }
 });
 
 Ext.define('CustomApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
-
-    _getContext: function(app) {
-        debugger;
-    },
 
     launch: function() {
 
