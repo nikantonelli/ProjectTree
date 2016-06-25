@@ -94,7 +94,8 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                             var filters = [
                                 {
                                     property: 'WorkspacePermission',
-                                    value: 'Workspace User'
+                                    operator: '<',
+                                    value: 'Workspace Admin'
                                 }
                             ];
 
