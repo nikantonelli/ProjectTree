@@ -88,10 +88,30 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                     listeners: {
                         afterrender: function(cmp) {
                             var treeItem = me;
-
                             var record = me.getRecord();
-                            record.getCollection('TeamMembers').load().then({
+                            var app = this.up('#projectApp');
+
+                            var filters = [
+                                {
+                                    property: 'WorkspacePermission',
+                                    value: 'Workspace User'
+                                }
+                            ];
+
+                            if (app.getSetting('projectAdminsOnly').value === true) {
+                                filters = [
+                                    {
+                                        property: 'WorkspacePermission',
+                                        value: 'Project Admin'
+                                    }
+                                ];
+                            }
+
+                            record.getCollection('Editors', {
+                                filters: filters
+                            }).load().then({
                                 success: function(data) {
+                                    cmp.suspendLayouts();
                                     _.each(data, function(member) {
                                         cmp.add(
                                             {   xtype: 'container',
@@ -101,6 +121,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                             }
                                         );
                                     });
+                                    cmp.resumeLayouts();
                                 }
                             });
                         }
@@ -116,9 +137,25 @@ Ext.define('CustomApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
 
+    itemId: 'projectApp',
+
+    getSettingsFields: function() {
+        return [
+            {
+                xtype: 'rallycheckboxfield',
+                fieldLabel: 'Show Project Admins Only',
+                labelWidth: 200,
+                name: 'projectAdminsOnly'
+            }
+        ];
+    },
+
     launch: function() {
 
         var app = this;
+
+        var settings = this.getSettings();
+
         var pt = Ext.create( 'Rally.ui.tree.ProjectTree', {
 
         config: {
