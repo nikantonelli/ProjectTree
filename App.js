@@ -58,7 +58,6 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 
             xtype: 'container',
             itemId: 'treeItemContent',
-            overflowX: true,
             cls: cls,
             layout: {
                 type: 'hbox'
@@ -77,14 +76,18 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                     }
                 },
                 {
-                    xtype: 'container',
+                    xtype: 'fieldcontainer',
                     itemId: 'userInfoRecord',
                     layout: {
-                        type: 'hbox'
+                        type: 'anchor'
+                    },
+                    defaults: {
+                        layout: '100%'
                     },
                     style: {
                         marginLeft: '50px'
                     },
+                    overflowX: true,
                     listeners: {
                         afterrender: function(cmp) {
                             var treeItem = me;
@@ -117,10 +120,10 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                     cmp.suspendLayouts();
                                     _.each(data, function(member) {
                                         cmp.add(
-                                            {   xtype: 'container',
+                                            {   xtype: 'textfield',
                                                 cls: 'rally-textfield-component',
                                                 style: { marginLeft: '10px'},
-                                                html: member.get('_refObjectName')
+                                                value: member.get('_refObjectName')
                                             }
                                         );
                                     });
