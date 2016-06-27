@@ -2,7 +2,7 @@
     "name": "ProjectTree",
     "className": "CustomApp",
     "server": "https://rally1.rallydev.com",
-    "sdk": "2.0",
+    "sdk": "2.1",
     "javascript": [
         "App.js"
     ],

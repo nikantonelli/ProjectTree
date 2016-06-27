@@ -1,3 +1,56 @@
+Ext.define('Rally.ui.popover.UserPopover', {
+        alias: 'widget.rallyuserpopover',
+        extend:  Rally.ui.popover.ListViewPopover ,
+
+        id: 'user-popover',
+        cls: 'userstory-popover',
+        title: 'Users',
+        titleIconCls: 'icon-story',
+
+        constructor: function(config) {
+
+            var app = Ext.getCmp('projectApp');
+
+            var fieldName = (app.getSetting('userGroup') && app.getSetting('userGroup').getValue()) || 'TeamMembers';
+
+            config.listViewConfig = Ext.merge({
+                model: Ext.identityFn('User'),
+                childField: fieldName,
+                addNewConfig: null,
+                gridConfig: {
+                    storeConfig: {
+                        context: config.context,
+                        fetch: true,
+                        listeners: {
+                            load: this._onStoreLoad,
+                            scope: this
+                        }
+                    },
+                    columnCfgs: [
+                        {
+                            dataIndex: 'DisplayName',
+                            width: 90
+                        },
+                        {
+                            dataIndex: 'EmailAddress',
+                            flex: 90
+                        },
+                        {
+                            dataIndex: 'Phone',
+                            width: 180
+                        },
+                        {
+                            dataIndex: 'UserName',
+                            width: 180
+                        }
+                    ]
+                }
+            }, config.listViewConfig);
+
+            this.callParent(arguments);
+        }
+});
+
 Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
     alias: 'widget.extendedTreeItem',
     extend: 'Rally.ui.tree.TreeItem',
@@ -85,9 +138,9 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                         layout: '100%'
                     },
                     style: {
-                        marginLeft: '50px'
+                        marginLeft: '50px',
+                        border: 15
                     },
-                    overflowX: true,
                     listeners: {
                         afterrender: function(cmp) {
                             var treeItem = me;
@@ -117,15 +170,28 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                 filters: filters
                             }).load().then({
                                 success: function(data) {
+                                    var popOver;
+                                    var thisPopoverCfg = {
+                                        record: record,
+                                        target: cmp.getTargetEl(),
+                                        field: fieldName,
+                                        autoShow: true
+                                    };
+                                    if (data.length > 0) {
+                                        cmp.getTargetEl().on('click', function() { Ext.create('Rally.ui.popover.UserPopover', thisPopoverCfg);});
+                                    }
                                     cmp.suspendLayouts();
+
                                     _.each(data, function(member) {
-                                        cmp.add(
+                                        var mseSelected;
+                                        var user =
                                             {   xtype: 'textfield',
-                                                cls: 'rally-textfield-component',
+                                                readOnly: true,
                                                 style: { marginLeft: '10px'},
                                                 value: member.get('_refObjectName')
-                                            }
-                                        );
+                                            };
+                                            
+                                        cmp.add(user);
                                     });
                                     cmp.resumeLayouts();
                                 }
@@ -133,6 +199,19 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                         }
                     }
                 }
+//                ,{
+//                    xtype: 'image',
+//                    id: 'helpIcon-' + me.getRecord().get('ObjectID'),
+//                    autoEl: 'div',
+//                    hidden: true,
+//                    hideMode: 'offsets',
+//                    src: '/slm/images/icon_help.gif',
+//                    listeners: {
+//                        click: function(arg1, arg2, arg3, arg4) {
+//                            debugger;
+//                        }
+//                    }
+//                }
             ]
         });
 
@@ -144,6 +223,7 @@ Ext.define('CustomApp', {
     componentCls: 'app',
 
     itemId: 'projectApp',
+    id: 'projectApp',
     stateful: true,
     stateId: 'projectApp-' + Ext.id(),
 
