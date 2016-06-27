@@ -18,8 +18,10 @@ Ext.define('Rally.ui.popover.UserPopover', {
                 childField: fieldName,
                 addNewConfig: null,
                 gridConfig: {
-                    storeConfig: {
+                        enableEditing: false,
+                        storeConfig: {
                         context: config.context,
+
                         fetch: true,
                         listeners: {
                             load: this._onStoreLoad,
@@ -175,6 +177,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                         record: record,
                                         target: cmp.getTargetEl(),
                                         field: fieldName,
+                                        title: fieldName,
                                         autoShow: true
                                     };
                                     if (data.length > 0) {

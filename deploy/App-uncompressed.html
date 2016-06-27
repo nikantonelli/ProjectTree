@@ -3,7 +3,7 @@
 <head>
     <title>ProjectTree</title>
 
-    <script type="text/javascript" src="/apps/2.0/sdk-debug.js"></script>
+    <script type="text/javascript" src="/apps/2.1/sdk-debug.js"></script>
 
     <script type="text/javascript">
         Rally.onReady(function () {
@@ -27,8 +27,10 @@
                 childField: fieldName,
                 addNewConfig: null,
                 gridConfig: {
-                    storeConfig: {
+                        enableEditing: false,
+                        storeConfig: {
                         context: config.context,
+
                         fetch: true,
                         listeners: {
                             load: this._onStoreLoad,
@@ -184,6 +186,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                         record: record,
                                         target: cmp.getTargetEl(),
                                         field: fieldName,
+                                        title: fieldName,
                                         autoShow: true
                                     };
                                     if (data.length > 0) {
