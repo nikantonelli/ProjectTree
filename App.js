@@ -108,7 +108,9 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                 ];
                             }
 
-                            record.getCollection('Editors', {
+                            var fieldName = (app.getSetting('userGroup') && app.getSetting('userGroup').getValue()) || 'TeamMembers';
+
+                            record.getCollection(fieldName, {
                                 filters: filters
                             }).load().then({
                                 success: function(data) {
@@ -139,6 +141,8 @@ Ext.define('CustomApp', {
     componentCls: 'app',
 
     itemId: 'projectApp',
+    stateful: true,
+    stateId: 'projectApp-' + Ext.id(),
 
     getSettingsFields: function() {
         return [
@@ -147,6 +151,17 @@ Ext.define('CustomApp', {
                 fieldLabel: 'Show Project Admins Only',
                 labelWidth: 200,
                 name: 'projectAdminsOnly'
+            },
+            {
+                xtype: 'radiogroup',
+                name: 'userGroup',
+                fieldLabel: 'User Type Selection',
+                // Arrange radio buttons into two columns, distributed vertically
+                columns : 1,
+                items: [
+                    { boxLabel: 'Editors', name: 'rb', inputValue: 'Editors'},
+                    { boxLabel: 'Team Members', name: 'rb', inputValue: 'TeamMembers', checked: true }
+                ]
             }
         ];
     },
@@ -154,8 +169,6 @@ Ext.define('CustomApp', {
     launch: function() {
 
         var app = this;
-
-        var settings = this.getSettings();
 
         var pt = Ext.create( 'Rally.ui.tree.ProjectTree', {
 
