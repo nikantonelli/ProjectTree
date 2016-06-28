@@ -259,6 +259,12 @@ Ext.define('CustomApp', {
             {
                 xtype: 'radiogroup',
                 fieldLabel: 'User Type Selection',
+                labelWidth: 200,
+                style: {
+                    borderColor: '#e0e0e0',
+                    borderStyle: 'solid none',
+                    borderWidth: 'thick'
+                },
                 name: 'typeGroup',
                 columns : 1,
                 items: [
@@ -267,7 +273,7 @@ Ext.define('CustomApp', {
                 ],
                 listeners: {
                     afterrender: function(box){
-                        box.setValue({ userGroup: me.getSetting('userGroup')});
+                        box.setValue({ userGroup: me.getSetting('userGroup') || 'TeamMembers'});
                     }
                 }
             }
@@ -279,6 +285,9 @@ Ext.define('CustomApp', {
         var app = this;
 
         var pt = Ext.create( 'Rally.ui.tree.ProjectTree', {
+
+//        stateful: true,
+//        stateId: app.getContext().getScopedStateId('projectTree'),
 
         config: {
             treeItemConfigForRecordFn:  function(record) {
