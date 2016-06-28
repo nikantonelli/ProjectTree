@@ -11,7 +11,24 @@ Ext.define('Rally.ui.popover.UserPopover', {
 
             var app = Ext.getCmp('projectApp');
 
-            var fieldName = (app.getSetting('userGroup') && app.getSetting('userGroup').getValue()) || 'TeamMembers';
+            var fieldName = app.getSetting('userGroup')  || 'TeamMembers';
+
+            var filters = [
+                {
+                    property: 'WorkspacePermission',
+                    operator: '<',
+                    value: 'Workspace Admin'
+                }
+            ];
+
+            if (app.getSetting('projectAdminsOnly') === true) {
+                filters = [
+                    {
+                        property: 'WorkspacePermission',
+                        value: 'Project Admin'
+                    }
+                ];
+            }
 
             config.listViewConfig = Ext.merge({
                 model: Ext.identityFn('User'),
@@ -21,7 +38,7 @@ Ext.define('Rally.ui.popover.UserPopover', {
                         enableEditing: false,
                         storeConfig: {
                         context: config.context,
-
+                        filters: filters,
                         fetch: true,
                         listeners: {
                             load: this._onStoreLoad,
@@ -157,7 +174,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                 }
                             ];
 
-                            if (app.getSetting('projectAdminsOnly').value === true) {
+                            if (app.getSetting('projectAdminsOnly') === true) {
                                 filters = [
                                     {
                                         property: 'WorkspacePermission',
@@ -166,7 +183,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                 ];
                             }
 
-                            var fieldName = (app.getSetting('userGroup') && app.getSetting('userGroup').getValue()) || 'TeamMembers';
+                            var fieldName = app.getSetting('userGroup') || 'TeamMembers';
 
                             record.getCollection(fieldName, {
                                 filters: filters
@@ -240,13 +257,13 @@ Ext.define('CustomApp', {
             },
             {
                 xtype: 'radiogroup',
-                name: 'userGroup',
                 fieldLabel: 'User Type Selection',
+                name: 'typeGroup',
                 // Arrange radio buttons into two columns, distributed vertically
                 columns : 1,
                 items: [
-                    { boxLabel: 'Editors', name: 'rb', inputValue: 'Editors'},
-                    { boxLabel: 'Team Members', name: 'rb', inputValue: 'TeamMembers', checked: true }
+                    { boxLabel: 'Editors', name: 'userGroup', inputValue: 'Editors'},
+                    { boxLabel: 'Team Members', name: 'userGroup', inputValue: 'TeamMembers', checked: true }
                 ]
             }
         ];
