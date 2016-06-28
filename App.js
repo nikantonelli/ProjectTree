@@ -219,19 +219,6 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                         }
                     }
                 }
-//                ,{
-//                    xtype: 'image',
-//                    id: 'helpIcon-' + me.getRecord().get('ObjectID'),
-//                    autoEl: 'div',
-//                    hidden: true,
-//                    hideMode: 'offsets',
-//                    src: '/slm/images/icon_help.gif',
-//                    listeners: {
-//                        click: function(arg1, arg2, arg3, arg4) {
-//                            debugger;
-//                        }
-//                    }
-//                }
             ]
         });
 
@@ -259,7 +246,6 @@ Ext.define('CustomApp', {
                 xtype: 'radiogroup',
                 fieldLabel: 'User Type Selection',
                 name: 'typeGroup',
-                // Arrange radio buttons into two columns, distributed vertically
                 columns : 1,
                 items: [
                     { boxLabel: 'Editors', name: 'userGroup', inputValue: 'Editors'},
