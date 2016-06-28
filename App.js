@@ -6,20 +6,25 @@ Ext.define('Rally.ui.popover.UserPopover', {
         cls: 'userstory-popover',
         title: 'Users',
         titleIconCls: 'icon-story',
-
+        maxHeight: 600,
         constructor: function(config) {
 
             var app = Ext.getCmp('projectApp');
 
             var fieldName = app.getSetting('userGroup')  || 'TeamMembers';
 
-            var filters = [
+            var filters = Rally.data.wsapi.Filter.or([
                 {
                     property: 'WorkspacePermission',
-                    operator: '<',
+                    operator: '=',
                     value: 'Workspace Admin'
+                },
+                {
+                    property: 'WorkspacePermission',
+                    operator: '=',
+                    value: 'Project Admin'
                 }
-            ];
+            ]);
 
             if (app.getSetting('projectAdminsOnly') === true) {
                 filters = [
@@ -35,11 +40,15 @@ Ext.define('Rally.ui.popover.UserPopover', {
                 childField: fieldName,
                 addNewConfig: null,
                 gridConfig: {
+                        stateful: true,
+                        stateId: app.getContext().getScopedStateId('gridConfig'),
                         enableEditing: false,
                         storeConfig: {
                         context: config.context,
                         filters: filters,
                         fetch: true,
+                        pageSize: 50,
+                        autoScroll: true,
                         listeners: {
                             load: this._onStoreLoad,
                             scope: this
@@ -166,13 +175,18 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                             var record = me.getRecord();
                             var app = this.up('#projectApp');
 
-                            var filters = [
+                            var filters = Rally.data.wsapi.Filter.or([
                                 {
                                     property: 'WorkspacePermission',
-                                    operator: '<',
+                                    operator: '=',
                                     value: 'Workspace Admin'
+                                },
+                                {
+                                    property: 'WorkspacePermission',
+                                    operator: '=',
+                                    value: 'Project Admin'
                                 }
-                            ];
+                            ]);
 
                             if (app.getSetting('projectAdminsOnly') === true) {
                                 filters = [
@@ -232,9 +246,9 @@ Ext.define('CustomApp', {
     itemId: 'projectApp',
     id: 'projectApp',
     stateful: true,
-    stateId: 'projectApp-' + Ext.id(),
 
     getSettingsFields: function() {
+        var me = this;
         return [
             {
                 xtype: 'rallycheckboxfield',
@@ -249,8 +263,13 @@ Ext.define('CustomApp', {
                 columns : 1,
                 items: [
                     { boxLabel: 'Editors', name: 'userGroup', inputValue: 'Editors'},
-                    { boxLabel: 'Team Members', name: 'userGroup', inputValue: 'TeamMembers', checked: true }
-                ]
+                    { boxLabel: 'Team Members', name: 'userGroup', inputValue: 'TeamMembers' }
+                ],
+                listeners: {
+                    afterrender: function(box){
+                        box.setValue({ userGroup: me.getSetting('userGroup')});
+                    }
+                }
             }
         ];
     },
