@@ -7,7 +7,7 @@ Shows the project tree and will list out the people connected to the tree node a
 
 When you open up the tree node, the app will asynchronously fetch the user list and show them along side. If you click on the userlist area, a popover comes up with more user details. You can change the code to add other fields to this popover.
 
-The red bar in front of a name indicates Project Admin status. Green indicates normal user
+The red bar in front of a name indicates Workspace or SUbscription Admin status. Amber indicates Project Admi and Green indicates normal user.
 
 ![alt text](https://github.com/nikantonelli/ProjectTree/blob/master/Images/projectTreePermissions.png)
 
