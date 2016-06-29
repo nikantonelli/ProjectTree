@@ -183,6 +183,10 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                                 cmp.add(user);
                                             });
                                             cmp.resumeLayouts();
+                                            
+                                            //If you want instant update to show the users, add this line in. If you don't the
+                                            //users get shown on the next redraw of the tree item - which is actually useful!
+                                            //cmp.updateLayout();
                                         }
                                     });
                                 }
