@@ -20,49 +20,25 @@
 
             var app = Ext.getCmp('projectApp');
 
-            var fieldName = app.getSetting('userGroup')  || 'TeamMembers';
-
-            var filters = Rally.data.wsapi.Filter.or([
-                {
-                    property: 'WorkspacePermission',
-                    operator: '=',
-                    value: 'Workspace Admin'
-                },
-                {
-                    property: 'WorkspacePermission',
-                    operator: '=',
-                    value: 'Project Admin'
-                }
-            ]);
-
-            if (app.getSetting('projectAdminsOnly') === true) {
-                filters = [
-                    {
-                        property: 'WorkspacePermission',
-                        value: 'Project Admin'
-                    }
-                ];
-            }
-
             config.listViewConfig = Ext.merge({
                 model: Ext.identityFn('User'),
-                childField: fieldName,
+                childField: app.getSetting('userGroup')  || 'TeamMembers',
                 addNewConfig: null,
                 gridConfig: {
-                        stateful: true,
-                        stateId: app.getContext().getScopedStateId('gridConfig'),
-                        enableEditing: false,
-                        storeConfig: {
-                        context: config.context,
-                        filters: filters,
-                        fetch: true,
-                        pageSize: 50,
-                        autoScroll: true,
-                        listeners: {
-                            load: this._onStoreLoad,
-                            scope: this
-                        }
-                    },
+                    stateful: true,
+                    stateId: app.getContext().getScopedStateId('gridConfig'),
+                    enableEditing: false,
+                    store: config.recordStore,
+//                    storeConfig: {
+//                        context: config.context,
+//                        filters: app._getFilters(app),
+//                        fetch: true,
+//                        pageSize: 50,
+//                        listeners: {
+//                            load: this._onStoreLoad,
+//                            scope: this
+//                        }
+//                    },
                     columnCfgs: [
                         {
                             dataIndex: 'DisplayName',
@@ -184,59 +160,44 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                             var record = me.getRecord();
                             var app = this.up('#projectApp');
 
-                            var filters = Rally.data.wsapi.Filter.or([
-                                {
-                                    property: 'WorkspacePermission',
-                                    operator: '=',
-                                    value: 'Workspace Admin'
-                                },
-                                {
-                                    property: 'WorkspacePermission',
-                                    operator: '=',
-                                    value: 'Project Admin'
-                                }
-                            ]);
-
-                            if (app.getSetting('projectAdminsOnly') === true) {
-                                filters = [
-                                    {
-                                        property: 'WorkspacePermission',
-                                        value: 'Project Admin'
-                                    }
-                                ];
-                            }
-
                             var fieldName = app.getSetting('userGroup') || 'TeamMembers';
 
-                            record.getCollection(fieldName, {
-                                filters: filters
-                            }).load().then({
-                                success: function(data) {
-                                    var popOver;
-                                    var thisPopoverCfg = {
-                                        record: record,
-                                        target: cmp.getTargetEl(),
-                                        field: fieldName,
-                                        title: fieldName,
-                                        autoShow: true
-                                    };
-                                    if (data.length > 0) {
-                                        cmp.getTargetEl().on('click', function() { Ext.create('Rally.ui.popover.UserPopover', thisPopoverCfg);});
-                                    }
-                                    cmp.suspendLayouts();
-
-                                    _.each(data, function(member) {
-                                        var mseSelected;
-                                        var user =
-                                            {   xtype: 'textfield',
-                                                readOnly: true,
-                                                style: { marginLeft: '10px'},
-                                                value: member.get('_refObjectName')
-                                            };
-                                            
-                                        cmp.add(user);
+                            Rally.data.ModelFactory.getModel({ type: 'User',
+                                success: function(model) {
+                                    var store = record.getCollection(fieldName, {
+                                        filters: app._getFilters(app)
                                     });
-                                    cmp.resumeLayouts();
+                                    store.model = model;
+                                    store.load().then({
+                                        success: function(data) {
+                                            var popOver;
+                                            var thisPopoverCfg = {
+                                                record: record,
+                                                target: cmp.getTargetEl(),
+                                                field: fieldName,
+                                                title: fieldName,
+                                                autoShow: true,
+                                                recordStore: store
+                                            };
+                                            if (data.length > 0) {
+                                                cmp.getTargetEl().on('click', function() { Ext.create('Rally.ui.popover.UserPopover', thisPopoverCfg);});
+                                            }
+                                            cmp.suspendLayouts();
+
+                                            _.each(data, function(member) {
+                                                var mseSelected;
+                                                var user =
+                                                    {   xtype: 'textfield',
+                                                        readOnly: true,
+                                                        style: { marginLeft: '10px'},
+                                                        value: member.get('_refObjectName')
+                                                    };
+                                                    
+                                                cmp.add(user);
+                                            });
+                                            cmp.resumeLayouts();
+                                        }
+                                    });
                                 }
                             });
                         }
@@ -287,6 +248,31 @@ Ext.define('CustomApp', {
                 }
             }
         ];
+    },
+
+    _getFilters: function(app) {
+
+        var filters = Rally.data.wsapi.Filter.or([
+            {
+                property: 'WorkspacePermission',
+                operator: '=',
+                value: 'Workspace Admin'
+            },
+            {
+                property: 'WorkspacePermission',
+                operator: '=',
+                value: 'Project Admin'
+            }
+        ]);
+
+        if (app.getSetting('projectAdminsOnly') === true) {
+            filters = [
+                {
+                    property: 'WorkspacePermission',
+                    value: 'Project Admin'
+                }
+            ];
+        }
     },
 
     launch: function() {
