@@ -249,7 +249,7 @@ Ext.define('CustomApp', {
             {
                 property: 'WorkspacePermission',
                 operator: '=',
-                value: 'Workspace Admin'
+                value: 'Workspace User'
             },
             {
                 property: 'WorkspacePermission',
