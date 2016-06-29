@@ -5,7 +5,7 @@ ProjectTree
 
 Shows the project tree and will list out the people connected to the tree node as either "Editors" or as "Team Members". The definition of these two types is taken directly from the WSAPI fields on the "User" type.
 
-When you open up the tree node, the app will asynchronously fetch the user list and show them along side. If you click on the userlist area, a popover comes up with more user details (also fetched asynchronously. You can change the code to add other fields to this popover.
+When you open up the tree node, the app will asynchronously fetch the user list and show them along side. If you click on the userlist area, a popover comes up with more user details. You can change the code to add other fields to this popover.
 
 ![alt text](https://github.com/nikantonelli/ProjectTree/blob/master/Images/projectTreePermissions.png)
 
