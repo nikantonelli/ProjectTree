@@ -176,7 +176,8 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 
                                             _.each(data, function(member) {
                                                 var mseSelected;
-                                                var thisBorder = member.get('WorkspacePermission') === 'Project Admin'? '#ff8080' : '#80ff80';
+                                                var thisBorder = member.get('WorkspacePermission') === 'Workspace User'? 'lightgreen' :
+                                                    member.get('WorkspacePermission') === 'Project Admin'? 'orange' : 'red';
                                                 var user =
                                                     {   xtype: 'textfield',
                                                         readOnly: true,
@@ -254,18 +255,21 @@ Ext.define('CustomApp', {
 
     _getFilters: function(app) {
 
-        var filters = Rally.data.wsapi.Filter.or([
-            {
-                property: 'WorkspacePermission',
-                operator: '=',
-                value: 'Workspace User'
-            },
-            {
-                property: 'WorkspacePermission',
-                operator: '=',
-                value: 'Project Admin'
-            }
-        ]);
+        var filters = [];
+        if (app.getSetting('userGroup') !== 'TeamMembers'){
+             filters = Rally.data.wsapi.Filter.or([
+                {
+                    property: 'WorkspacePermission',
+                    operator: '=',
+                    value: 'Workspace User'
+                },
+                {
+                    property: 'WorkspacePermission',
+                    operator: '=',
+                    value: 'Project Admin'
+                }
+            ]);
+        }
 
         if (app.getSetting('projectAdminsOnly') === true) {
             filters = [
