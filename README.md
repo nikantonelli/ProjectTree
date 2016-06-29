@@ -11,7 +11,7 @@ The red bar in front of a name indicates Project Admin status. Green indicates n
 
 ![alt text](https://github.com/nikantonelli/ProjectTree/blob/master/Images/projectTreePermissions.png)
 
-The app does not list workspace admins or subscription admins. These people have automatic rights to everywhere. If you want to find out who has these rights, you can either: a) take out the filters from the app, which may end up with a long list or b) talk to someone within your organisation.
+The app does not list workspace admins or subscription admins. These people have automatic rights to everywhere. If you want to find out who has these rights, you can either: a) take out the filters from the app, which may end up with a long list or b) talk to someone within your organisation. If you are already a workspace or subscription admin, you can find this info from the users tab after you click on the config (hammer and spanner) icon.
 
 The app settings allow you to filter out just the project admins from the selected user class ("Team Member" or "Editor" ). 
 
