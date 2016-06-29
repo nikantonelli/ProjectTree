@@ -11,7 +11,8 @@ When you open up the tree node, the app will asynchronously fetch the user list 
 
 The app does not list workspace admins or subscription admins. These people have automatic rights to everywhere. If you want to find out who has these rights, you can either: a) take out the filters from the app, which may end up with a long list or b) talk to someone within your organisation.
 
-The app settings allow you to filter out project admins from the selected user type ("Team Member" or "Editor" ).
+The app settings allow you to filter out project admins from the selected user class ("Team Member" or "Editor" ). You can also chose to see only Project Admins within that class.
+
 ![alt text](https://github.com/nikantonelli/ProjectTree/blob/master/Images/appOptions.png)
 
 ## License
