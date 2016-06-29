@@ -20,16 +20,6 @@ Ext.define('Rally.ui.popover.UserPopover', {
                     stateId: app.getContext().getScopedStateId('gridConfig'),
                     enableEditing: false,
                     store: config.recordStore,
-//                    storeConfig: {
-//                        context: config.context,
-//                        filters: app._getFilters(app),
-//                        fetch: true,
-//                        pageSize: 50,
-//                        listeners: {
-//                            load: this._onStoreLoad,
-//                            scope: this
-//                        }
-//                    },
                     columnCfgs: [
                         {
                             dataIndex: 'DisplayName',
@@ -158,7 +148,6 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                     var store = record.getCollection(fieldName, {
                                         filters: app._getFilters(app)
                                     });
-                                    store.model = model;
                                     store.load().then({
                                         success: function(data) {
                                             store.model = model;
@@ -178,10 +167,16 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 
                                             _.each(data, function(member) {
                                                 var mseSelected;
+                                                var thisBorder = member.get('WorkspacePermission') === 'Project Admin'? '#ff8080' : '#ffffff';
                                                 var user =
                                                     {   xtype: 'textfield',
                                                         readOnly: true,
-                                                        style: { marginLeft: '10px'},
+                                                        border: '0 0 0 2',
+                                                        style: {
+                                                            borderColor: thisBorder,
+                                                            borderStyle: 'solid',
+                                                            marginLeft: '10px'
+                                                        },
                                                         value: member.get('_refObjectName')
                                                     };
                                                     
@@ -265,6 +260,7 @@ Ext.define('CustomApp', {
                 }
             ];
         }
+        return filters;
     },
 
     launch: function() {
