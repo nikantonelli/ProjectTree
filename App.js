@@ -172,7 +172,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                                 var user =
                                                     {   xtype: 'textfield',
                                                         readOnly: true,
-                                                        border: '0 0 0 2',
+                                                        border: '0 0 0 5',
                                                         style: {
                                                             borderColor: thisBorder,
                                                             borderStyle: 'solid',
