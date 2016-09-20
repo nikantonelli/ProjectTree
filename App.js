@@ -101,10 +101,13 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
             this.toggleExpander();
         }
 
+        pe = window.document.getElementById(this.parentTreeItem.id);
+
         this.insert(1, {
 
             xtype: 'container',
             itemId: 'treeItemContent',
+            id: Ext.id(),
             cls: cls,
             layout: {
                 type: 'hbox'
@@ -117,7 +120,6 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                     listeners: {
                         afterrender: function() {
                             this.setupListeners();
-                            this.fireEvent('draw');
                         },
                         scope: this
                     }
@@ -145,6 +147,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 
                             Rally.data.ModelFactory.getModel({ type: 'User',
                                 success: function(model) {
+
                                     var store = record.getCollection(fieldName, {
                                         filters: app._getFilters(app)
                                     });
@@ -190,6 +193,9 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                             //see the userlist associated with project nodes with no children - then you have to make a redraw by expanding and
                                             //collapsing another project node
                                             cmp.updateLayout();
+
+                                            //Bring the parent back into view
+                                            pe.scrollIntoView();
                                         }
                                     });
                                 }
@@ -276,6 +282,7 @@ Ext.define('CustomApp', {
     launch: function() {
 
         var app = this;
+
 
         var pt = Ext.create( 'Rally.ui.tree.ProjectTree', {
 
