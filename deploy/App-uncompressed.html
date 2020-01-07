@@ -83,7 +83,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 
         }) !== undefined);
 
-        return isEditor ? 'lightgreen' : isProjectAdmin ? 'orange' : 'blue';
+        return isEditor ? 'lightgreen' : isProjectAdmin ? 'orange' : 'red';
     },
 
     getContentTpl: function() {
@@ -230,7 +230,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                             cmp.updateLayout();
 
                                             //Bring the parent back into view
-                                            pe.scrollIntoView(null,true,true,true);
+//                                            pe.scrollIntoView(null,true,true,true);
                                         }
                                     });
                                 }

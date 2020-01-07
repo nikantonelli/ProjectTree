@@ -74,7 +74,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 
         }) !== undefined);
 
-        return isEditor ? 'lightgreen' : isProjectAdmin ? 'orange' : 'blue';
+        return isEditor ? 'lightgreen' : isProjectAdmin ? 'orange' : 'red';
     },
 
     getContentTpl: function() {
