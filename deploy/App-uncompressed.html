@@ -60,6 +60,30 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
     config: {
         displayedFields: ['Name', 'Description', 'TeamMembers']
     },
+    initComponent: function() {
+        this.callParent(arguments);
+        this.on('afterrender', function() {
+
+
+            //Do in two steps to keep in sync
+            if (this._getAutoExpanded()) {
+                this.setExpanded(true);
+            }
+
+            this.draw();
+
+            if (this._getAutoExpanded()) {
+                this.fireEvent('expand', this);
+            }
+        }, this);
+
+    },
+
+    _getAutoExpanded: function() {
+        var app = this.up('#projectApp');
+
+        return app.getSetting('autoExpand');
+    },
 
     _checkPermissions: function( member, record) {
 
@@ -254,7 +278,8 @@ Ext.define('Niks.apps.ProjectTreeApp', {
 
     config: {
         defaultSettings: {
-            userGroup: 'Editors'
+            userGroup: 'Editors',
+            autoExpand: false
         }
     },
 
@@ -287,6 +312,12 @@ Ext.define('Niks.apps.ProjectTreeApp', {
                         box.setValue({ userGroup: me.getSetting('userGroup')});
                     }
                 }
+            },
+            {
+                xtype: 'rallycheckboxfield',
+                fieldLabel: 'Auto Expand Tree',
+                labelWidth: 200,
+                name: 'autoExpand'
             }
         ];
     },
