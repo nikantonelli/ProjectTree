@@ -175,7 +175,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 
                                     var store = record.getCollection(fieldName, {
                                         filters: app._getFilters(app),
-                                        fetch: [ 'WorkspacePermission', 'UserPermissions', 'TeamMemberships', 'DisplayName']
+                                        fetch: [ 'WorkspacePermission', 'EmailAddress', 'Phone', 'Username', 'UserPermissions', 'TeamMemberships', 'DisplayName']
                                     });
                                     store.load().then({
                                         success: function(data) {
