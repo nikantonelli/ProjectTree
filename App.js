@@ -17,7 +17,7 @@ Ext.define('Niks.ui.UserPopover', {
                 addNewConfig: null,
                 gridConfig: {
                     stateful: true,
-                    stateId: app.getContext().getScopedStateId('gridConfig'),
+//                    stateId: app.getContext().getScopedStateId('gridConfig'),
                     enableEditing: false,
                     store: config.recordStore,
                     columnCfgs: [
@@ -30,7 +30,7 @@ Ext.define('Niks.ui.UserPopover', {
                             flex: 90
                         },
                         {
-                            dataIndex: 'Phone',
+                            dataIndex: 'Role',
                             width: 180
                         },
                         {
@@ -175,7 +175,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 
                                     var store = record.getCollection(fieldName, {
                                         filters: app._getFilters(app),
-                                        fetch: [ 'WorkspacePermission', 'EmailAddress', 'Phone', 'Username', 'UserPermissions', 'TeamMemberships', 'DisplayName']
+                                        fetch: [ 'WorkspacePermission', 'EmailAddress', 'Role', 'Username', 'UserPermissions', 'TeamMemberships', 'DisplayName']
                                     });
                                     store.load().then({
                                         success: function(data) {
