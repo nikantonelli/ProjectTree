@@ -1,4 +1,4 @@
-Ext.define('Rally.ui.popover.UserPopover', {
+Ext.define('Niks.ui.UserPopover', {
         alias: 'widget.rallyuserpopover',
         extend:  Rally.ui.popover.ListViewPopover ,
 
@@ -13,7 +13,7 @@ Ext.define('Rally.ui.popover.UserPopover', {
 
             config.listViewConfig = Ext.merge({
                 model: Ext.identityFn('User'),
-                childField: app.getSetting('userGroup')  || 'TeamMembers',
+                childField: app.getSetting('userGroup'),
                 addNewConfig: null,
                 gridConfig: {
                     stateful: true,
@@ -50,6 +50,31 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
     extend: 'Rally.ui.tree.TreeItem',
     config: {
         displayedFields: ['Name', 'Description', 'TeamMembers']
+    },
+
+    _checkPermissions: function( member, record) {
+
+        //Need to get back to the app to fetch the userInfo
+        var app = this.up('#projectApp');
+        var user = app._findUser(member, app);
+
+        //Now look in the user.permissions for the access to this 'record'
+
+        var projectPermissions = _.filter(user.permissions, function (permission) {
+            return permission.get('Project')._ref === record.get('_ref');
+        });
+
+        var isEditor = (_.find(projectPermissions, function(permission) {
+            return (permission.get('Role') === 'Editor');
+
+        }) !== undefined);
+
+        var isProjectAdmin = (_.find(projectPermissions, function(permission) {
+            return (permission.get('Role') === 'Admin');
+
+        }) !== undefined);
+
+        return isEditor ? 'lightgreen' : isProjectAdmin ? 'orange' : 'blue';
     },
 
     getContentTpl: function() {
@@ -101,7 +126,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
             this.toggleExpander();
         }
 
-        pe = window.document.getElementById(this.parentTreeItem.id);
+        pe = window.document.getElementById((this.parentTreeItem?this.parentTreeItem.id:this.id));
 
         this.insert(1, {
 
@@ -143,16 +168,18 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                             var record = me.getRecord();
                             var app = this.up('#projectApp');
 
-                            var fieldName = app.getSetting('userGroup') || 'TeamMembers';
+                            var fieldName = app.getSetting('userGroup');
 
                             Rally.data.ModelFactory.getModel({ type: 'User',
                                 success: function(model) {
 
                                     var store = record.getCollection(fieldName, {
-                                        filters: app._getFilters(app)
+                                        filters: app._getFilters(app),
+                                        fetch: [ 'WorkspacePermission', 'UserPermissions', 'TeamMemberships', 'DisplayName']
                                     });
                                     store.load().then({
                                         success: function(data) {
+
                                             store.model = model;
                                             var popOver;
                                             var thisPopoverCfg = {
@@ -164,14 +191,13 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                                 recordStore: store
                                             };
                                             if (data.length > 0) {
-                                                cmp.getTargetEl().on('click', function() { Ext.create('Rally.ui.popover.UserPopover', thisPopoverCfg);});
+                                                cmp.getTargetEl().on('click', function() { Ext.create('Niks.ui.UserPopover', thisPopoverCfg);});
                                             }
                                             cmp.suspendLayouts();
 
                                             _.each(data, function(member) {
                                                 var mseSelected;
-                                                var thisBorder = member.get('WorkspacePermission') === 'Workspace User'? 'lightgreen' :
-                                                    member.get('WorkspacePermission') === 'Project Admin'? 'orange' : 'red';
+                                                var thisBorder = me._checkPermissions(member, record);
                                                 var user =
                                                     {   xtype: 'textfield',
                                                         readOnly: true,
@@ -195,7 +221,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                             cmp.updateLayout();
 
                                             //Bring the parent back into view
-                                            pe.scrollIntoView();
+//                                            pe.scrollIntoView(null,true,true,true);
                                         }
                                     });
                                 }
@@ -209,13 +235,19 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
     }
 });
 
-Ext.define('CustomApp', {
+Ext.define('Niks.apps.ProjectTreeApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
 
     itemId: 'projectApp',
     id: 'projectApp',
     stateful: true,
+
+    config: {
+        defaultSettings: {
+            userGroup: 'Editors'
+        }
+    },
 
     getSettingsFields: function() {
         var me = this;
@@ -243,7 +275,7 @@ Ext.define('CustomApp', {
                 ],
                 listeners: {
                     afterrender: function(box){
-                        box.setValue({ userGroup: me.getSetting('userGroup') || 'TeamMembers'});
+                        box.setValue({ userGroup: me.getSetting('userGroup')});
                     }
                 }
             }
@@ -254,7 +286,7 @@ Ext.define('CustomApp', {
 
         var filters = [];
         if (app.getSetting('userGroup') !== 'TeamMembers'){
-             filters = Rally.data.wsapi.Filter.or([
+             filters = [ Rally.data.wsapi.Filter.or([
                 {
                     property: 'WorkspacePermission',
                     operator: '=',
@@ -265,7 +297,7 @@ Ext.define('CustomApp', {
                     operator: '=',
                     value: 'Project Admin'
                 }
-            ]);
+            ])];
         }
 
         if (app.getSetting('projectAdminsOnly') === true) {
@@ -279,6 +311,9 @@ Ext.define('CustomApp', {
         return filters;
     },
 
+    userInfo: [],
+    projectInfo: [],
+
     launch: function() {
 
         var app = this;
@@ -289,57 +324,41 @@ Ext.define('CustomApp', {
 //        stateful: true,
 //        stateId: app.getContext().getScopedStateId('projectTree'),
 
-        config: {
-            treeItemConfigForRecordFn:  function(record) {
-                if (record.get('_type') === 'workspace'){
-                    return { xtype: 'rallyplaintreeitem' };
-                }
-                else {
+            config: {
+                //We are going to enforce that this works within the context the user is at.
+                topLevelModel: 'Project',
+                treeItemConfigForRecordFn:  function(record) {
                     return {
                         xtype: 'extendedTreeItem',
                         selectable: true
                     };
-                }
-            },
-            topLevelStoreConfig: {
-                fetch: ['Name', 'State', 'Workspace'],
-                filters: [{
-                    property: 'State',
-                    value: 'Open'
-                }, {
-                    property: 'Projects.State',
-                    value: 'Open'
-                }],
-                sorters: [{
-                    property: 'Name',
-                    direction: 'ASC'
-                }],
-                context: function() { app._getContext(app); }
-            },
-
-            childItemsStoreConfigForParentRecordFn: function(record){
-
-                var storeConfig = {
-                    fetch: ['Name', 'Description', 'Owner', 'Children:summary[State]', 'State', 'Workspace'],
-                    hydrate: ['Owner'],
+                },
+                topLevelStoreConfig: {
+                    // context: {
+                    //     workspace: app.getContext().getWorkspace(),
+                    //     project: app.getContext().getProject()
+                    // },
+                    fetch: ['Name', 'State', 'Children:summary[State]', 'Workspace', 'Editors', 'TeamMembers'],
+                    filters: [{
+                        property: 'ObjectID',
+                        value: app.getContext().getProject().ObjectID
+                    }],
                     sorters: [{
                         property: 'Name',
                         direction: 'ASC'
-                    }]
-                };
+                    }],
+                },
 
-                if(record.get('_type') === 'workspace'){
-                    return Ext.apply(storeConfig, {
-                        filters: [{
-                            property: 'Parent',
-                            value: 'null'
-                        }],
-                        context: {
-                            workspace: record.get('_ref'),
-                            project: null
-                        }
-                    });
-                } else {
+                childItemsStoreConfigForParentRecordFn: function(record){
+
+                    var storeConfig = {
+                        fetch: ['Name', 'Description', 'Owner', 'Children:summary[State]', 'State', 'Workspace'],
+                        hydrate: ['Owner'],
+                        sorters: [{
+                            property: 'Name',
+                            direction: 'ASC'
+                        }]
+                    };
                     return Ext.apply(storeConfig, {
                         filters: [{
                             property: 'Parent',
@@ -350,11 +369,137 @@ Ext.define('CustomApp', {
                             project: null
                         }
                     });
+                },
+                handleChildItemStoreLoad: function(store, records, parentTreeItem) {
+                    var me = this;
+                    // For each record, fetch the TeamMembers, Viewers and the Editors
+                    app._getUserDetails(records,app).then({
+                        success: function(newUsers) { 
+                            _.each(newUsers, function(user) {
+                                app.userInfo.push(user);
+                            });
+                            me.renderChildRecords(records, parentTreeItem); 
+                        }
+                    });
+                },
+                handleParentItemStoreLoad: function(store, records) {
+                    var me = this;
+                    // For each record, fetch the TeamMembers, Viewers and the Editors
+                    app._getUserDetails(records,app).then({
+                        success: function(newUsers) { 
+                            _.each(newUsers, function(user) {
+                                app.userInfo.push(user);
+                            });
+                            me.renderParentRecords(records); 
+                        }
+                    });
                 }
-            }
-        }
-       });
+            },
+        });
 
        this.add(pt);
+    },
+
+    _getUserDetails: function(records,app) {
+        var deferred = Ext.create('Deft.Deferred');
+
+        var promises = [];
+
+        _.each(records, function(record) {
+            promises.push(record.getCollection(app.getSetting('userGroup')).load({
+                filters: app._getFilters(app),
+                fetch: [ 'WorkspacePermission', 'UserPermissions', 'TeamMemberships', 'DisplayName']
+            }));
+        });
+
+        Deft.Promise.all(promises).then({
+            success: function(results) {
+                // For every user that we know about, we need to get all the project permissions that they have to specifically
+                // colour the display differently for each project they appear in
+
+                var updateUserPermissionsList = [];
+
+                _.each(results, function(userList) {
+                    if (userList.length === 0) { return; }
+                    
+                    _.each(userList, function( user) {
+                        if ( app._findUser(user, app) === undefined) {
+                            updateUserPermissionsList.push(user);
+                        }
+                    });
+                });
+
+                if (updateUserPermissionsList.length > 0)  {
+                    app._getUserPermissions(updateUserPermissionsList).then({
+                        success: function(results) {
+                            deferred.resolve(updateUserPermissionsList);
+                        },
+                        failure: function() {
+                            deferred.reject();
+                        }
+                    });
+                }
+                else {
+                    deferred.resolve();
+                }
+            },
+
+            failure: function() {
+                deferred.reject();
+            }
+
+        });
+        return deferred.promise;
+    },
+
+    _getUserPermissions: function(userList) {
+        var deferred = Ext.create('Deft.Deferred');
+        var promises = [];
+
+        _.each(userList, function(user) {
+
+            promises.push( Ext.create('Rally.data.wsapi.Store', {
+                model: 'ProjectPermission',
+                filters: [
+                    {
+                        property: 'User',
+                        value: user.get('_ref')
+                    },
+                    {
+                        property: 'Workspace',
+                        value: Ext.getCmp('projectApp').getContext().getWorkspace()._ref
+                    }
+                ],
+                listeners: {
+                    load: function(store,records) {
+                        user.permissions = records;
+                    }
+                }
+            }).load());
+
+            // promises.push(user.getCollection('UserPermissions').load( {
+            //     fetch: ['Project', 'Role'],
+            //     callback: function(results) {
+            //         user.permissions = results;
+            //     }
+            // }));
+        });
+
+        Deft.Promise.all(promises).then({
+            success: function(results) {
+                deferred.resolve(results);
+            },
+            failure: function() {
+                deferred.reject();
+            }
+        });
+
+        return deferred.promise;
+    },
+
+    _findUser: function(user, app) {
+        return _.find(app.userInfo, function(knownUser) {
+            return knownUser.get('_refObjectUUID') === user.get('_refObjectUUID');
+        });
     }
 });
