@@ -5,7 +5,7 @@ Ext.define('Niks.ui.UserPopover', {
         id: 'user-popover',
         cls: 'userstory-popover',
         title: 'Users',
-        titleIconCls: 'icon-story',
+        titleIconCls: 'icon-user',
         maxHeight: 600,
         constructor: function(config) {
 
