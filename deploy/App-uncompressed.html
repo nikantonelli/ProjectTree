@@ -378,7 +378,8 @@ Ext.define('Niks.apps.ProjectTreeApp', {
                     //     workspace: app.getContext().getWorkspace(),
                     //     project: app.getContext().getProject()
                     // },
-                    fetch: ['Name', 'State', 'Children:summary[State]', 'Workspace', 'Editors', 'TeamMembers'],
+                    fetch: ['Name', 'Owner', 'State', 'Children:summary[State]', 'Workspace', 'Editors', 'TeamMembers'],
+                    hydrate: ['Owner'],
                     filters: [{
                         property: 'ObjectID',
                         value: app.getContext().getProject().ObjectID
