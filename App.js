@@ -206,14 +206,14 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 
                                             store.model = model;
                                             var popOver;
-                                            var thisPopoverCfg = {
+                                            var thisPopoverCfg = Ext.clone({
                                                 record: record,
                                                 target: cmp.getTargetEl(),
                                                 field: fieldName,
                                                 title: fieldName,
                                                 autoShow: true,
                                                 recordStore: store
-                                            };
+                                            });
                                             if (data.length > 0) {
                                                 cmp.getTargetEl().on('click', function() { Ext.create('Niks.ui.UserPopover', thisPopoverCfg);});
                                             }
@@ -222,7 +222,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                             _.each(data, function(member) {
                                                 var mseSelected;
                                                 var thisBorder = me._checkPermissions(member, record);
-                                                var user =
+                                                var user = Ext.clone(
                                                     {   xtype: 'textfield',
                                                         readOnly: true,
                                                         border: '0 0 0 5',
@@ -232,7 +232,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                                             marginLeft: '10px'
                                                         },
                                                         value: member.get('_refObjectName')
-                                                    };
+                                                    });
                                                     
                                                 cmp.add(user);
                                             });
@@ -270,7 +270,8 @@ Ext.define('Niks.apps.ProjectTreeApp', {
     config: {
         defaultSettings: {
             userGroup: 'Editors',
-            autoExpand: false
+            autoExpand: false,
+            projectAdminsOnly: true
         }
     },
 
@@ -438,10 +439,13 @@ Ext.define('Niks.apps.ProjectTreeApp', {
         var promises = [];
 
         _.each(records, function(record) {
-            promises.push(record.getCollection(app.getSetting('userGroup')).load({
-                filters: app._getFilters(app),
-                fetch: [ 'WorkspacePermission', 'UserPermissions', 'TeamMemberships', 'DisplayName']
-            }));
+            var config = Ext.clone(
+                {
+                    filters: app._getFilters(app),
+                    fetch: [ 'WorkspacePermission', 'UserPermissions', 'TeamMemberships', 'DisplayName']
+                }
+            );
+            promises.push(record.getCollection(app.getSetting('userGroup')).load(config));
         });
 
         Deft.Promise.all(promises).then({
@@ -490,9 +494,8 @@ Ext.define('Niks.apps.ProjectTreeApp', {
 
         _.each(userList, function(user) {
 
-            promises.push( Ext.create('Rally.data.wsapi.Store', {
-                model: 'ProjectPermission',
-                filters: [
+            var filters = Ext.clone(
+                [
                     {
                         property: 'User',
                         value: user.get('_ref')
@@ -501,7 +504,12 @@ Ext.define('Niks.apps.ProjectTreeApp', {
                         property: 'Workspace',
                         value: Ext.getCmp('projectApp').getContext().getWorkspace()._ref
                     }
-                ],
+                ]
+            );
+
+            promises.push( Ext.create('Rally.data.wsapi.Store', {
+                model: 'ProjectPermission',
+                filters: filters,
                 listeners: {
                     load: function(store,records) {
                         user.permissions = records;
