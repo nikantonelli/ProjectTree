@@ -90,15 +90,18 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 
         if (projectPermissions.length === 0) return null;
 
+        var isProjectAdmin = (_.find(projectPermissions, function(permission) {
+            return (permission.get('Role') === 'Admin');
+
+        }) !== undefined);
+
+        if (app.getSetting('projectAdminsOnly') && !isProjectAdmin) { return null;}
+
         var isEditor = (_.find(projectPermissions, function(permission) {
             return (permission.get('Role') === 'Editor');
 
         }) !== undefined);
 
-        var isProjectAdmin = (_.find(projectPermissions, function(permission) {
-            return (permission.get('Role') === 'Admin');
-
-        }) !== undefined);
 
         return isEditor ? 'lightgreen' : isProjectAdmin ? 'orange' : 'red';
     },
