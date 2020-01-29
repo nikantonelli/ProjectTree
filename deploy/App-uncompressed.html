@@ -97,7 +97,7 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
             return permission.get('Project')._ref === record.get('_ref');
         });
 
-        if (projectPermissions.length === 0) return null;
+        if (projectPermissions.length === 0) return app.getSetting('showViewers')? 'lightblue': null;
 
         var isProjectAdmin = (_.find(projectPermissions, function(permission) {
             return (permission.get('Role') === 'Admin');
@@ -286,11 +286,42 @@ Ext.define('Niks.apps.ProjectTreeApp', {
     id: 'projectApp',
     stateful: true,
 
+    items: [
+
+        {
+            xtype: 'container',
+            margin: '5 0 20 0',
+            layout: 'hbox',
+            items: [
+                {
+                    xtype: 'container',
+                    html: '<div style="margin-left: 10px; padding-left: 10px;padding-right: 20px">Permission Colour Coding:   </div>'
+                },
+                {
+                    xtype: 'container',
+                    html: '<div style="margin-left: 10px; padding-left: 3px; padding-right: 10px; border-left: 5px solid red">Workspace Admin</div>'
+                },
+                {
+                    xtype: 'container',
+                    html: '<div style="margin-left: 10px; padding-left: 3px; padding-right: 10px; border-left: 5px solid orange">Project Admin</div>'
+                },
+                {
+                    xtype: 'container',
+                    html: '<div style="margin-left: 10px; padding-left: 3px; padding-right: 10px; border-left: 5px solid lightgreen">Project Editor</div>'
+                },
+                {
+                    xtype: 'container',
+                    html: '<div style="margin-left: 10px; padding-left: 3px; padding-right: 10px; border-left: 5px solid lightblue">Project Viewer</div>'
+                }
+            ]
+        }
+    ],
     config: {
         defaultSettings: {
             userGroup: 'Editors',
             autoExpand: true,
-            projectAdminsOnly: true
+            projectAdminsOnly: false,
+            showViewers: false
         }
     },
 
@@ -329,6 +360,12 @@ Ext.define('Niks.apps.ProjectTreeApp', {
                 fieldLabel: 'Auto Expand Tree',
                 labelWidth: 200,
                 name: 'autoExpand'
+            },
+            {
+                xtype: 'rallycheckboxfield',
+                fieldLabel: 'Show Viewers',
+                labelWidth: 200,
+                name: 'showViewers'
             }
         ];
     },
