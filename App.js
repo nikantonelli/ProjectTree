@@ -88,6 +88,8 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
             return permission.get('Project')._ref === record.get('_ref');
         });
 
+        if (projectPermissions.length === 0) return null;
+
         var isEditor = (_.find(projectPermissions, function(permission) {
             return (permission.get('Role') === 'Editor');
 
@@ -222,19 +224,21 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
                                             _.each(data, function(member) {
                                                 var mseSelected;
                                                 var thisBorder = me._checkPermissions(member, record);
-                                                var user = Ext.clone(
-                                                    {   xtype: 'textfield',
-                                                        readOnly: true,
-                                                        border: '0 0 0 5',
-                                                        style: {
-                                                            borderColor: thisBorder,
-                                                            borderStyle: 'solid',
-                                                            marginLeft: '10px'
-                                                        },
-                                                        value: member.get('_refObjectName')
-                                                    });
-                                                    
-                                                cmp.add(user);
+                                                if (thisBorder !== null) {
+                                                    var user = Ext.clone(
+                                                        {   xtype: 'textfield',
+                                                            readOnly: true,
+                                                            border: '0 0 0 5',
+                                                            style: {
+                                                                borderColor: thisBorder,
+                                                                borderStyle: 'solid',
+                                                                marginLeft: '10px'
+                                                            },
+                                                            value: member.get('_refObjectName')
+                                                        });
+                                                        
+                                                    cmp.add(user);
+                                                }
                                             });
                                             cmp.resumeLayouts();
 
@@ -248,6 +252,9 @@ Ext.define( 'Rally.ui.tree.extendedTreeItem' , {
 //                                            pe.scrollIntoView(null,true,true,true);
                                         }
                                     });
+                                },
+                                failure: function() {
+                                    console.log("Failed to get model for 'User'");
                                 }
                             });
                         }
@@ -270,7 +277,7 @@ Ext.define('Niks.apps.ProjectTreeApp', {
     config: {
         defaultSettings: {
             userGroup: 'Editors',
-            autoExpand: false,
+            autoExpand: true,
             projectAdminsOnly: true
         }
     },
@@ -412,6 +419,9 @@ Ext.define('Niks.apps.ProjectTreeApp', {
                                 app.userInfo.push(user);
                             });
                             me.renderChildRecords(records, parentTreeItem); 
+                        },
+                        failure: function() {
+                            console.log("Failed to get User details in handleChildItemStoreLoad");
                         }
                     });
                 },
@@ -424,7 +434,11 @@ Ext.define('Niks.apps.ProjectTreeApp', {
                                 app.userInfo.push(user);
                             });
                             me.renderParentRecords(records); 
+                        },
+                        failure: function() {
+                            console.log("Failed to get User details in handleParentItemStoreLoad");
                         }
+
                     });
                 }
             },
@@ -442,7 +456,7 @@ Ext.define('Niks.apps.ProjectTreeApp', {
             var config = Ext.clone(
                 {
                     filters: app._getFilters(app),
-                    fetch: [ 'WorkspacePermission', 'UserPermissions', 'TeamMemberships', 'DisplayName']
+                    fetch: [ 'WorkspacePermission', 'UserPermissions', 'DisplayName']
                 }
             );
             promises.push(record.getCollection(app.getSetting('userGroup')).load(config));
@@ -456,7 +470,7 @@ Ext.define('Niks.apps.ProjectTreeApp', {
                 var updateUserPermissionsList = [];
 
                 _.each(results, function(userList) {
-                    if (userList.length === 0) { return; }
+                    if (userList.length === 0) {  return; }
                     
                     _.each(userList, function( user) {
                         if ( app._findUser(user, app) === undefined) {
@@ -471,6 +485,7 @@ Ext.define('Niks.apps.ProjectTreeApp', {
                             deferred.resolve(updateUserPermissionsList);
                         },
                         failure: function() {
+                            console.log("Failed to get new users permissions for ", updateUserPermissionsList);
                             deferred.reject();
                         }
                     });
@@ -481,6 +496,7 @@ Ext.define('Niks.apps.ProjectTreeApp', {
             },
 
             failure: function() {
+                console.log("Faailed to get users for projects");
                 deferred.reject();
             }
 
@@ -530,6 +546,7 @@ Ext.define('Niks.apps.ProjectTreeApp', {
                 deferred.resolve(results);
             },
             failure: function() {
+                console.log("Failed in _getUserPermissions");
                 deferred.reject();
             }
         });
